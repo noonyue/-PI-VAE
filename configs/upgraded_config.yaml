@@ -1,0 +1,125 @@
+# Upgraded PI-VAE Configuration
+# 升级版PI-VAE系统配置文件
+
+# 数据配置
+data:
+  excel_path: "Sampedata0.xlsx"
+  uv_sheet: "VIS_0"
+  nir_sheet: "NIR_0"
+  train_test_split: 0.8
+  random_seed: 42
+
+# 模型配置
+model:
+  latent_dim: 32  # GPU完整版: 32
+  n_peaks: 10     # GPU完整版: 10
+
+  # Transformer编码器参数
+  transformer:
+    d_model: 128  # 8GB显存优化: 128（原256）
+    n_heads: 4    # 8GB显存优化: 4（原8）
+    n_layers: 4   # 保持: 4
+    d_ff: 256     # 8GB显存优化: 256（原512）
+    dropout: 0.1
+
+  # 损失权重
+  loss_weights:
+    beta: 1.0                    # KL散度权重
+    contrastive_weight: 0.5      # 对比学习权重
+    physics_weight: 0.1          # 物理约束权重
+
+# 训练配置
+training:
+  batch_size: 16  # 8GB显存优化: 16
+  epochs: 200     # GPU完整版: 200
+  learning_rate: 0.001
+  weight_decay: 0.0001
+
+  # 优化器
+  optimizer: "adam"
+
+  # 学习率调度
+  scheduler:
+    type: "reduce_on_plateau"
+    patience: 10
+    factor: 0.5
+    min_lr: 0.00001
+
+  # 早停
+  early_stopping:
+    patience: 20
+    min_delta: 0.0001
+
+  # 梯度裁剪
+  gradient_clip: 1.0
+
+# 数据增强配置（用于对比学习）
+augmentation:
+  enabled: true
+  strength: "moderate"  # weak, moderate, strong
+  augmentation_prob: 0.8
+
+  # 具体增强策略
+  gaussian_noise:
+    enabled: true
+    noise_level_range: [0.005, 0.025]
+
+  spectral_shift:
+    enabled: true
+    max_shift_range: [3, 8]
+
+  baseline_drift:
+    enabled: true
+    drift_types: ["linear", "quadratic", "sine"]
+    drift_strength_range: [0.05, 0.2]
+
+  intensity_scaling:
+    enabled: true
+    scale_range: [0.85, 1.15]
+
+  spectral_masking:
+    enabled: true
+    mask_ratio_range: [0.05, 0.15]
+    probability: 0.5
+
+# 物理约束配置
+physics_constraints:
+  min_width: 0.01
+  max_width: 0.5
+  enforce_monotonicity: false
+
+  # 约束权重
+  weight_position: 1.0
+  weight_height: 1.0
+  weight_width: 1.0
+  weight_monotonicity: 0.5
+
+# 对比学习配置
+contrastive_learning:
+  temperature: 0.07
+  use_hard_negatives: false
+  hard_negative_weight: 2.0
+
+# 设备配置
+device:
+  use_cuda: true  # GPU训练
+  gpu_id: 0
+
+# 日志和保存配置
+logging:
+  log_interval: 10  # 每10个batch打印一次
+  save_interval: 10  # 每10个epoch保存一次
+  tensorboard: true
+
+  # 保存路径
+  checkpoint_dir: "checkpoints_upgraded"
+  log_dir: "logs_upgraded"
+  result_dir: "results_redesign"
+  figure_dir: "figures_redesign"
+
+# 评估配置
+evaluation:
+  metrics: ["accuracy", "precision", "recall", "f1"]
+  save_confusion_matrix: true
+  save_attention_weights: true
+  save_latent_space: true
